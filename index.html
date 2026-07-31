@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>前支任務申請 - 申請單位專用</title>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f2f4f8; --panel:#ffffff; --panel2:#eef1f7; --line:#dce1eb;
+    --text:#171b26; --muted:#6b7488; --accent:#d9631f; --blue:#2f6fe0;
+    --green:#1f9d5c; --amber:#c98a0e; --red:#d64545; --shadow:0 1px 3px rgba(20,25,40,.05);
+    --fab-text:#fff;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0c1220; --panel:#131b2e; --panel2:#182238; --line:#26314a;
+      --text:#e7ecf6; --muted:#7e8aa8; --accent:#ff8c42; --blue:#4f8bff;
+      --green:#3ddc84; --amber:#ffcf5c; --red:#ff5a5a; --shadow:none;
+      --fab-text:#111;
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;-webkit-tap-highlight-color:transparent}
+  #app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative;background:var(--bg)}
+  input,select,textarea,button{font-family:inherit}
+  a{color:inherit}
+
+  /* ---------- 共用元件 ---------- */
+  .topbar{padding:16px 20px 12px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+  .eyebrow{font-family:'JetBrains Mono';font-size:10px;color:var(--accent);letter-spacing:.15em;margin-bottom:4px;font-weight:700}
+  .topbar h1{font-family:'Chakra Petch';font-size:18px;margin:0;font-weight:700}
+  .topbar p{margin:4px 0 0;font-size:11.5px;color:var(--muted)}
+  .topbar .row{display:flex;justify-content:space-between;align-items:flex-start}
+  .btn-logout{font-family:'JetBrains Mono';font-size:10.5px;color:var(--muted);border:1px solid var(--line);background:var(--panel2);padding:6px 10px;border-radius:20px;cursor:pointer}
+
+  .tabs{display:flex;gap:6px;padding:12px 20px;overflow-x:auto;background:var(--panel);border-bottom:1px solid var(--line)}
+  .tab{font-family:'JetBrains Mono';font-size:11px;padding:6px 12px;border-radius:20px;background:var(--panel2);color:var(--muted);border:1px solid var(--line);white-space:nowrap;cursor:pointer;flex-shrink:0}
+  .tab.active{background:color-mix(in srgb, var(--accent) 14%, transparent);color:var(--accent);border-color:var(--accent);font-weight:700}
+
+  .content{flex:1;padding:16px 20px 110px;overflow-y:auto}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
+  .task-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px}
+  .id{font-family:'JetBrains Mono';font-size:10.5px;color:var(--muted)}
+  .tag{font-family:'JetBrains Mono';font-size:10px;padding:3px 8px;border-radius:3px;display:inline-flex;align-items:center;gap:4px;font-weight:600;white-space:nowrap}
+  .tag.pending{background:color-mix(in srgb, var(--amber) 14%, transparent);color:var(--amber)}
+  .tag.assigned{background:color-mix(in srgb, var(--blue) 14%, transparent);color:var(--blue)}
+  .tag.filled{background:color-mix(in srgb, var(--green) 14%, transparent);color:var(--green)}
+  .tag.rejected{background:color-mix(in srgb, var(--red) 14%, transparent);color:var(--red)}
+  .tag::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+  .card h3{font-size:15px;margin:0 0 6px;font-weight:700}
+  .card p{font-size:12.5px;color:var(--muted);margin:2px 0}
+  .card .time{font-family:'JetBrains Mono';font-size:11.5px;color:var(--text);margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+  .card .actions{display:flex;gap:8px;margin-top:10px}
+
+  .field{margin-bottom:14px}
+  .field label{display:block;font-family:'JetBrains Mono';font-size:10.5px;color:var(--muted);letter-spacing:.06em;margin-bottom:6px}
+  .field input, .field select, .field textarea{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:11px 12px;font-size:13.5px;color:var(--text)}
+  .field textarea{resize:vertical;min-height:64px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+  .btn{display:block;width:100%;text-align:center;padding:13px;border-radius:10px;font-weight:700;font-size:13.5px;border:none;cursor:pointer}
+  .btn-primary{background:var(--accent);color:var(--fab-text)}
+  .btn-outline{background:transparent;border:1px solid var(--line);color:var(--text)}
+  .btn-small{padding:8px 12px;font-size:11.5px;border-radius:8px;flex:1}
+  .btn-green{background:var(--green);color:#06251a}
+  .btn-red{background:var(--red);color:#2a0808}
+  .btn-blue{background:var(--blue);color:#fff}
+
+  .section-lbl{font-family:'JetBrains Mono';font-size:10px;color:var(--accent);letter-spacing:.15em;margin:18px 0 10px;font-weight:700}
+  .empty{text-align:center;color:var(--muted);font-size:12.5px;padding:40px 20px}
+  .msg{font-size:12px;padding:10px 12px;border-radius:8px;margin-bottom:12px}
+  .msg.error{background:color-mix(in srgb, var(--red) 14%, transparent);color:var(--red)}
+  .msg.ok{background:color-mix(in srgb, var(--green) 14%, transparent);color:var(--green)}
+
+  .stats{display:flex;gap:10px;margin-bottom:16px;overflow-x:auto}
+  .stat{flex-shrink:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 16px;min-width:78px}
+  .stat .n{font-family:'JetBrains Mono';font-size:20px;font-weight:700}
+  .stat .l{font-size:10px;color:var(--muted);margin-top:2px}
+  .stat.amber .n{color:var(--amber)} .stat.blue .n{color:var(--blue)} .stat.green .n{color:var(--green)}
+
+  .tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:74px;background:var(--panel);border-top:1px solid var(--line);display:flex;padding-bottom:14px;z-index:10}
+  .tabbar .item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:10px;color:var(--muted);cursor:pointer;background:none;border:none;font-family:inherit}
+  .tabbar .item.active{color:var(--accent);font-weight:700}
+  .tabbar .ic{width:19px;height:19px;border-radius:5px;border:1.5px solid currentColor}
+
+  /* ---------- 登入畫面 ---------- */
+  .auth-wrap{flex:1;display:flex;flex-direction:column;justify-content:center;padding:32px 28px}
+  .auth-wrap .brand-mark{width:44px;height:44px;border:2px solid var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;transform:rotate(45deg);margin-bottom:20px}
+  .auth-wrap .brand-mark span{transform:rotate(-45deg);font-family:'Chakra Petch';font-weight:700;color:var(--accent)}
+  .auth-wrap h1{font-family:'Chakra Petch';font-size:22px;margin:0 0 4px;font-weight:700}
+  .auth-wrap p.sub{margin:0 0 26px;font-size:12.5px;color:var(--muted)}
+  .auth-switch{text-align:center;margin-top:16px;font-size:12px;color:var(--muted)}
+  .auth-switch b{color:var(--accent);cursor:pointer}
+  .loading{text-align:center;padding:60px 20px;color:var(--muted);font-family:'JetBrains Mono';font-size:12px}
+</style>
+</head>
+<body>
+<div id="app"><div class="loading">載入中…</div></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword,
+  createUserWithEmailAndPassword, signOut, updatePassword
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, setDoc, addDoc, collection,
+  query, where, orderBy, onSnapshot, serverTimestamp, Timestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// ------------------------------------------------------------
+// Firebase 設定：共用衛生營系統（medical-battalion-tracker）專案
+// ------------------------------------------------------------
+const firebaseConfig = {
+  apiKey: "AIzaSyDHJ_ZVLwl9-bD-ZPCTsBcfSjK1A15oJN4",
+  authDomain: "medical-battalion-tracker.firebaseapp.com",
+  projectId: "medical-battalion-tracker",
+  storageBucket: "medical-battalion-tracker.firebasestorage.app",
+  messagingSenderId: "442272611220",
+  appId: "1:442272611220:web:88ef96f7789200c27ded81",
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// 本系統獨立 collection（避免與衛生營原系統資料衝突）
+const COL_REQUESTS = "forward_support_requests";
+const COL_ASSIGNMENTS = "forward_support_assignments";
+const COL_UNITS = "forward_support_units";
+
+const UNITS_INTERNAL = ["營部", "一連", "二連"];
+const STATUS_LABEL = { pending:"待審核", assigned:"已分發", filled:"已完成", rejected:"不核准" };
+
+let currentUser = null;   // Firebase Auth user
+let profile = null;       // Firestore users/{uid} 文件內容
+let allRequests = [];     // 目前使用者可見的任務快取
+let unsubRequests = null;
+let activeTab = null;
+
+const $app = document.getElementById("app");
+
+// ------------------------------------------------------------
+// Auth 狀態監聽
+// ------------------------------------------------------------
+onAuthStateChanged(auth, async (user) => {
+  if (unsubRequests) { unsubRequests(); unsubRequests = null; }
+  currentUser = user;
+  if (!user) { profile = null; renderLogin(); return; }
+
+  const snap = await getDoc(doc(db, "users", user.uid));
+  if (!snap.exists()) {
+    profile = { fsr_role: "applicant", fsr_unitName: "", email: user.email };
+  } else {
+    profile = snap.data();
+  }
+  if (profile.fsr_role !== "applicant") {
+    await signOut(auth);
+    renderLogin("login");
+    setTimeout(() => {
+      const msg = document.getElementById("authMsg");
+      if (msg) msg.innerHTML = `<div class="msg error">此帳號為內部人員帳號，請至指揮台站登入</div>`;
+    }, 0);
+    return;
+  }
+  bootRoleApp();
+});
+
+// ==============================================================
+// 登入 / 註冊
+// ==============================================================
+function renderLogin(mode = "login") {
+  $app.innerHTML = `
+    <div class="auth-wrap">
+      <div class="brand-mark"><span>前</span></div>
+      <h1>前支任務指揮台</h1>
+      <p class="sub">FORWARD SUPPORT DISPATCH ・ 衛生營</p>
+      <div id="authMsg"></div>
+      ${mode === "login" ? loginFormHtml() : registerFormHtml()}
+      <div class="auth-switch">
+        ${mode === "login"
+          ? `外部單位第一次使用？<b id="toRegister">申請帳號</b>`
+          : `已經有帳號了？<b id="toLogin">前往登入</b>`}
+      </div>
+    </div>`;
+
+  if (mode === "login") {
+    document.getElementById("toRegister").onclick = () => renderLogin("register");
+    document.getElementById("loginBtn").onclick = doLogin;
+  } else {
+    document.getElementById("toLogin").onclick = () => renderLogin("login");
+    document.getElementById("registerBtn").onclick = doRegister;
+    loadUnitOptions();
+  }
+}
+
+function loginFormHtml() {
+  return `
+    <div class="field"><label>帳號 EMAIL</label><input id="loginEmail" type="email" placeholder="you@example.com"></div>
+    <div class="field"><label>密碼</label><input id="loginPass" type="password" placeholder="••••••••"></div>
+    <button class="btn btn-primary" id="loginBtn">登入</button>`;
+}
+
+function registerFormHtml() {
+  return `
+    <div class="field"><label>選擇你的單位</label><select id="regUnit"><option value="">載入中…</option></select></div>
+    <div class="field"><label>帳號 EMAIL（供登入用）</label><input id="regEmail" type="email" placeholder="unit@example.com"></div>
+    <div class="field"><label>設定密碼</label><input id="regPass" type="password" placeholder="至少 6 碼"></div>
+    <button class="btn btn-primary" id="registerBtn">建立單位帳號</button>
+    <p style="font-size:11px;color:var(--muted);margin-top:10px">同一單位若有多人使用，可共用此組帳密登入，無需個別申請。</p>`;
+}
+
+async function loadUnitOptions() {
+  const sel = document.getElementById("regUnit");
+  try {
+    const q = query(collection(db, COL_UNITS));
+    onSnapshot(q, (snap) => {
+      const opts = ['<option value="">請選擇單位</option>'];
+      snap.forEach(d => {
+        const u = d.data();
+        opts.push(`<option value="${escapeHtml(u.unitName)}">${escapeHtml(u.unitName)}</option>`);
+      });
+      opts.push('<option value="__other__">＋ 找不到我的單位（手動輸入）</option>');
+      sel.innerHTML = opts.join("");
+      sel.onchange = () => {
+        if (sel.value === "__other__") {
+          const name = prompt("請輸入單位全名：");
+          if (name) {
+            const opt = document.createElement("option");
+            opt.value = name; opt.textContent = name; opt.selected = true;
+            sel.insertBefore(opt, sel.lastElementChild);
+          } else { sel.value = ""; }
+        }
+      };
+    });
+  } catch (e) {
+    sel.innerHTML = '<option value="">單位清單載入失敗，可手動輸入</option>';
+  }
+}
+
+async function doLogin() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const pass = document.getElementById("loginPass").value;
+  const msg = document.getElementById("authMsg");
+  msg.innerHTML = "";
+  if (!email || !pass) { msg.innerHTML = `<div class="msg error">請輸入帳號密碼</div>`; return; }
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch (e) {
+    msg.innerHTML = `<div class="msg error">登入失敗：${authErrorText(e)}</div>`;
+  }
+}
+
+async function doRegister() {
+  const unitName = document.getElementById("regUnit").value.trim();
+  const email = document.getElementById("regEmail").value.trim();
+  const pass = document.getElementById("regPass").value;
+  const msg = document.getElementById("authMsg");
+  msg.innerHTML = "";
+  if (!unitName) { msg.innerHTML = `<div class="msg error">請選擇或輸入單位名稱</div>`; return; }
+  if (!email || pass.length < 6) { msg.innerHTML = `<div class="msg error">請輸入 Email 與至少 6 碼密碼</div>`; return; }
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    await setDoc(doc(db, "users", cred.user.uid), {
+      email,
+      fsr_role: "applicant",
+      fsr_unitName: unitName,
+      fsr_createdAt: serverTimestamp(),
+    }, { merge: true });
+    // 若該單位不在清單中，補進 forward_support_units
+    await addDoc(collection(db, COL_UNITS), { unitName, addedAt: serverTimestamp() }).catch(()=>{});
+  } catch (e) {
+    msg.innerHTML = `<div class="msg error">註冊失敗：${authErrorText(e)}</div>`;
+  }
+}
+
+function authErrorText(e) {
+  const code = e && e.code || "";
+  if (code.includes("email-already-in-use")) return "此 Email 已被註冊，請直接登入";
+  if (code.includes("invalid-email")) return "Email 格式不正確";
+  if (code.includes("weak-password")) return "密碼強度不足（至少 6 碼）";
+  if (code.includes("wrong-password") || code.includes("invalid-credential")) return "帳號或密碼錯誤";
+  if (code.includes("user-not-found")) return "帳號不存在";
+  return e.message || "發生未知錯誤";
+}
+
+// ==============================================================
+// 依角色啟動對應介面
+// fsr_role: applicant | dispatcher | battalion_hq | company1 | company2 | admin
+// ==============================================================
+function bootRoleApp() {
+  activeTab = "myrequests";
+  renderApplicantShell();
+  watchRequestsForApplicant();
+}
+
+// ---------------- 共用：頂部列 + 登出 ----------------
+function topbarHtml(title, sub) {
+  return `
+    <div class="topbar">
+      <div class="row">
+        <div>
+          <div class="eyebrow">FORWARD SUPPORT</div>
+          <h1>${title}</h1>
+          <p>${sub}</p>
+        </div>
+        <button class="btn-logout" id="logoutBtn">登出</button>
+      </div>
+    </div>`;
+}
+function bindLogout(){ document.getElementById("logoutBtn").onclick = () => signOut(auth); }
+
+// ==============================================================
+// 申請人（外部單位）
+// ==============================================================
+function renderApplicantShell() {
+  $app.innerHTML = `
+    ${topbarHtml("前支任務申請", profile.fsr_unitName + " ・ 已登入")}
+    <div class="tabs">
+      <div class="tab" data-tab="newrequest">提出申請</div>
+      <div class="tab" data-tab="myrequests">我的申請</div>
+    </div>
+    <div class="content" id="content"></div>
+    <div class="tabbar">
+      <button class="item" data-tab="newrequest"><div class="ic"></div>提出申請</button>
+      <button class="item" data-tab="myrequests"><div class="ic"></div>我的申請</button>
+    </div>`;
+  bindLogout();
+  document.querySelectorAll("[data-tab]").forEach(el => el.onclick = () => { activeTab = el.dataset.tab; renderApplicantContent(); });
+  renderApplicantContent();
+}
+
+function renderApplicantContent() {
+  document.querySelectorAll(".tab,.tabbar .item").forEach(el => el.classList.toggle("active", el.dataset.tab === activeTab));
+  const c = document.getElementById("content");
+  if (activeTab === "newrequest") {
+    c.innerHTML = `
+      <div id="reqMsg"></div>
+      <div class="field"><label>申請單位</label><input value="${escapeHtml(profile.fsr_unitName)}" disabled></div>
+      <div class="row2">
+        <div class="field"><label>申請人級職</label><input id="fRank" placeholder="例：分隊長"></div>
+        <div class="field"><label>申請人姓名</label><input id="fName" placeholder="例：陳○○"></div>
+      </div>
+      <div class="field"><label>任務地點</label><input id="fLoc" placeholder="請輸入地點"></div>
+      <div class="row2">
+        <div class="field"><label>開始時間</label><input id="fStart" type="datetime-local"></div>
+        <div class="field"><label>結束時間</label><input id="fEnd" type="datetime-local"></div>
+      </div>
+      <div class="field"><label>備註（選填）</label><textarea id="fRemarks" placeholder="任務性質、注意事項..."></textarea></div>
+      <button class="btn btn-primary" id="submitReqBtn">送出申請</button>`;
+    document.getElementById("submitReqBtn").onclick = submitRequest;
+  } else {
+    const my = allRequests;
+    if (my.length === 0) { c.innerHTML = `<div class="empty">目前還沒有申請紀錄</div>`; return; }
+    c.innerHTML = my.map(taskCardHtml).join("");
+  }
+}
+
+async function submitRequest() {
+  const msg = document.getElementById("reqMsg");
+  const rank = document.getElementById("fRank").value.trim();
+  const name = document.getElementById("fName").value.trim();
+  const loc = document.getElementById("fLoc").value.trim();
+  const start = document.getElementById("fStart").value;
+  const end = document.getElementById("fEnd").value;
+  const remarks = document.getElementById("fRemarks").value.trim();
+  if (!rank || !name || !loc || !start || !end) {
+    msg.innerHTML = `<div class="msg error">請完整填寫必填欄位</div>`; return;
+  }
+  try {
+    await addDoc(collection(db, COL_REQUESTS), {
+      applicantUnit: profile.fsr_unitName,
+      applicantRank: rank,
+      applicantName: name,
+      location: loc,
+      taskStartTime: Timestamp.fromDate(new Date(start)),
+      taskEndTime: Timestamp.fromDate(new Date(end)),
+      remarks,
+      status: "pending",
+      assignedUnit: null,
+      createdAt: serverTimestamp(),
+      createdBy: currentUser.uid,
+    });
+    msg.innerHTML = `<div class="msg ok">申請已送出，可至「我的申請」查看進度</div>`;
+    ["fRank","fName","fLoc","fStart","fEnd","fRemarks"].forEach(id => document.getElementById(id).value = "");
+    activeTab = "myrequests";
+    setTimeout(()=>{ document.querySelectorAll(".tab,.tabbar .item").forEach(el=>el.classList.toggle("active", el.dataset.tab===activeTab)); renderApplicantContent(); }, 600);
+  } catch (e) {
+    msg.innerHTML = `<div class="msg error">送出失敗：${e.message}</div>`;
+  }
+}
+
+function watchRequestsForApplicant() {
+  const q = query(collection(db, COL_REQUESTS), where("createdBy", "==", currentUser.uid), orderBy("createdAt", "desc"));
+  unsubRequests = onSnapshot(q, (snap) => {
+    allRequests = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (activeTab === "myrequests") renderApplicantContent();
+  });
+}
+
+// ==============================================================
+// 共用卡片渲染
+// ==============================================================
+function taskCardHtml(r, withDispatchActions=false, withFillAction=false) {
+  const start = fmtTs(r.taskStartTime), end = fmtTs(r.taskEndTime);
+  const tagClass = r.status === "pending" ? "pending" : r.status === "assigned" ? "assigned" : r.status === "filled" ? "filled" : "rejected";
+  let actions = "";
+  if (withDispatchActions && r.status === "pending") {
+    actions = `<div class="actions">
+      <button class="btn btn-small btn-green" id="assign-${r.id}">分發</button>
+      <button class="btn btn-small btn-red" id="reject-${r.id}">駁回</button>
+    </div>`;
+  }
+  if (withFillAction && r.status === "assigned") {
+    actions = `<div class="actions"><button class="btn btn-small btn-blue" id="fill-${r.id}">填寫車長／駕駛</button></div>`;
+  }
+  return `
+    <div class="card">
+      <div class="task-top">
+        <span class="id">#${(r.id||"").slice(-6).toUpperCase()}</span>
+        <span class="tag ${tagClass}">${STATUS_LABEL[r.status] || r.status}${r.assignedUnit ? "・" + r.assignedUnit : ""}</span>
+      </div>
+      <h3>${escapeHtml(r.location || "")}</h3>
+      <p>申請單位｜${escapeHtml(r.applicantUnit || "")}</p>
+      <p>申請人｜${escapeHtml(r.applicantRank || "")} ${escapeHtml(r.applicantName || "")}</p>
+      ${r.remarks ? `<p>備註｜${escapeHtml(r.remarks)}</p>` : ""}
+      <div class="time">${start} — ${end}</div>
+      ${actions}
+    </div>`;
+}
+
+function fmtTs(ts) {
+  if (!ts) return "—";
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const p = n => String(n).padStart(2,"0");
+  return `${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+</script>
+</body>
+</html>
