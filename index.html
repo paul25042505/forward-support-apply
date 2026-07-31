@@ -123,6 +123,8 @@ const firebaseConfig = {
   appId: "1:442272611220:web:88ef96f7789200c27ded81",
 };
 
+const BUILD_VERSION = "2026-07-31.6";
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -185,6 +187,7 @@ function renderLogin(mode = "login") {
           ? `外部單位第一次使用？<b id="toRegister">申請帳號</b>`
           : `已經有帳號了？<b id="toLogin">前往登入</b>`}
       </div>
+      <p style="font-size:10px;color:var(--muted);margin-top:30px;text-align:center;font-family:'JetBrains Mono'">build ${BUILD_VERSION}</p>
     </div>`;
 
   if (mode === "login") {
@@ -303,7 +306,7 @@ function topbarHtml(title, sub) {
     <div class="topbar">
       <div class="row">
         <div>
-          <div class="eyebrow">FORWARD SUPPORT</div>
+          <div class="eyebrow">FORWARD SUPPORT ・ build ${BUILD_VERSION}</div>
           <h1>${title}</h1>
           <p>${sub}</p>
         </div>
